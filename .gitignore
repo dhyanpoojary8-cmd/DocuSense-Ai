@@ -47,3 +47,4 @@ backend/uploads/
 !.env.example 
 !docs/*.png 
 !docs/*.jpg 
+backend/dev_data/ 
