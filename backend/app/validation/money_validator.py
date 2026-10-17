@@ -71,17 +71,17 @@ def parse_monetary_value(
 
     # Special handling for zero-decimal currencies (e.g. IDR: "99,000" or "99.000" means integer 99000)
     if detected_currency in ZERO_DECIMAL_CURRENCIES:
-        # In IDR, both comma and period are routinely used as thousand separators (e.g. 99,000 or 99.000)
-        # However, if there are exactly 2 trailing digits like "99000,00", those are sen (cents)
-        if re.search(r"[,.]\d{2}$", compact) and len(compact) > 5 and not compact.endswith(",000"):
-            # Has explicit fractional cents: e.g. 99.000,50
-            if "," in compact and "." in compact:
-                normalized_str = compact.replace(".", "").replace(",", ".")
-            else:
-                normalized_str = compact.replace(",", ".")
-        else:
-            # Standard integer rupiah: remove all comma and dot grouping separators
-            normalized_str = compact.replace(",", "").replace(".", "")
+        # In IDR / zero-decimal mode, flag amounts where a separator is followed by only 1-2 digits as AMBIGUOUS
+        if re.search(r"[,.]\d{1,2}(?!\d)", compact):
+            return (
+                None,
+                FieldStatus.AMBIGUOUS,
+                [f"AMBIGUOUS_{field_name.upper()}"],
+                f"Value '{raw_value}' in {detected_currency} has ambiguous separator followed by only 1-2 digits",
+            )
+
+        # Standard integer rupiah: remove all comma and dot grouping separators
+        normalized_str = compact.replace(",", "").replace(".", "")
 
         try:
             val = Decimal(normalized_str)
