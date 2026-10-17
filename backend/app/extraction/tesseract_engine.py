@@ -120,7 +120,7 @@ class TesseractOCREngine(BaseOCREngine):
         self,
         image: Union[str, Path, Image.Image],
         psm: int = 6,
-        reconstruct_lines: bool = True,
+        reconstruct_lines: bool = False,
     ) -> str:
         """Run OCR on image and return extracted text string."""
         if not self.is_available():

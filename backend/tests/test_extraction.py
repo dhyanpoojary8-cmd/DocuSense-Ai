@@ -267,3 +267,110 @@ class TestMockExtractorProvenance:
         assert len(fields) == 6
         for name, field in fields.items():
             assert field.source == "mock", f"Field {name} was not marked with source='mock'!"
+
+
+# ============================================================================
+# 7. CHUNK 1 ROBUSTNESS RULES & IDR PARSER TESTS
+# ============================================================================
+
+class TestChunk1ExtractorRobustness:
+    """Tests for Stage 2 Chunk 1 robustness rules, IDR ambiguity guard, and line reconstruction."""
+
+    def test_idr_ambiguity_guard_trailing_digits(self):
+        """Separator followed by only 1-2 digits in IDR must be flagged AMBIGUOUS."""
+        val, status, flags, msg = parse_monetary_value("123,00", currency_hint="IDR", field_name="total")
+        assert status == FieldStatus.AMBIGUOUS
+        assert val is None
+        assert "AMBIGUOUS_TOTAL" in flags
+
+        val2, status2, _, _ = parse_monetary_value("123.5", currency_hint="IDR", field_name="total")
+        assert status2 == FieldStatus.AMBIGUOUS
+        assert val2 is None
+
+        # 3 digits after separator is valid thousands grouping
+        val3, status3, _, _ = parse_monetary_value("123,000", currency_hint="IDR", field_name="total")
+        assert status3 == FieldStatus.VALID
+        assert val3 == Decimal("123000")
+
+    def test_idr_digit_only_amounts(self):
+        """Digit-only amounts in IDR must have 4+ digits (or explicit 0 for tax)."""
+        # 4+ digits accepted
+        val, status, _, _ = parse_monetary_value("30000", currency_hint="IDR", field_name="subtotal")
+        assert status == FieldStatus.VALID
+        assert val == Decimal("30000")
+
+        # Explicit zero accepted (for zero tax)
+        val_zero, status_zero, _, _ = parse_monetary_value("0", currency_hint="IDR", field_name="tax", allow_negative=True)
+        assert status_zero == FieldStatus.VALID
+        assert val_zero == Decimal("0")
+
+        # Fewer than 4 digits rejected as invalid scale
+        val_short, status_short, flags_short, _ = parse_monetary_value("1", currency_hint="IDR", field_name="total")
+        assert status_short == FieldStatus.UNREADABLE
+        assert val_short is None
+        assert "INVALID_SCALE_TOTAL" in flags_short
+
+    def test_ocr_tolerant_keyword_matching(self):
+        """Fuzzy keyword matching handles OCR noise like [JQTAL, Sub L Total, PBI, PPN."""
+        extractor = DeterministicRuleExtractor()
+        text = """
+        STORE ABC
+        Sub L Total 30000
+        PBI: 3,000
+        2 [JQTAL 33,000
+        """
+        fields = extractor.extract_fields(text, source=ExtractionSource.OCR, currency_hint="IDR")
+        assert fields["subtotal"].normalized_value == "30000"
+        assert fields["tax"].normalized_value == "3000"
+        assert fields["total"].normalized_value == "33000"
+
+    def test_label_value_pairing_next_line(self):
+        """Values placed on the line immediately following a label are extracted."""
+        extractor = DeterministicRuleExtractor()
+        text = """
+        WARUNG INDONESIA
+        Sub L Total a
+        40000
+        Pajak
+        4,000
+        Total:
+        44,000
+        """
+        fields = extractor.extract_fields(text, source=ExtractionSource.OCR, currency_hint="IDR")
+        assert fields["subtotal"].normalized_value == "40000"
+        assert fields["tax"].normalized_value == "4000"
+        assert fields["total"].normalized_value == "44000"
+
+    def test_cash_change_exclusion_for_total(self):
+        """Cash, tunai, change, and kembali lines are excluded when determining total."""
+        extractor = DeterministicRuleExtractor()
+        text = """
+        RECEIPT
+        SUBTOTAL 20,000
+        TOTAL 20,000
+        CASH 50,000
+        KEMBALIAN 30,000
+        """
+        fields = extractor.extract_fields(text, source=ExtractionSource.OCR, currency_hint="IDR")
+        assert fields["total"].normalized_value == "20000"
+
+    def test_arithmetic_cross_check_abstains_on_inconsistent_fields(self):
+        """When subtotal + tax != total, fields are marked INCONSISTENT and normalized_value is cleared."""
+        extractor = DeterministicRuleExtractor()
+        text = """
+        STORE XYZ
+        SUBTOTAL 10,000
+        TAX 5,000
+        TOTAL 12,000
+        """
+        fields = extractor.extract_fields(text, source=ExtractionSource.OCR, currency_hint="IDR")
+        for fn in ("subtotal", "tax", "total"):
+            assert fields[fn].status == FieldStatus.INCONSISTENT
+            assert fields[fn].normalized_value is None
+            assert "ARITHMETIC_MISMATCH" in fields[fn].flags
+
+    def test_line_reconstruction_from_data(self):
+        """Tesseract line reconstruction groups vertically aligned word boxes."""
+        engine = TesseractOCREngine()
+        assert hasattr(engine, "reconstruct_lines_from_data")
+

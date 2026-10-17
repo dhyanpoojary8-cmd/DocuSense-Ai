@@ -80,6 +80,15 @@ def parse_monetary_value(
                 f"Value '{raw_value}' in {detected_currency} has ambiguous separator followed by only 1-2 digits",
             )
 
+        # Digit-only IDR amounts must have at least 4 digits (or 0)
+        if compact.isdigit() and compact != "0" and len(compact) < 4:
+            return (
+                None,
+                FieldStatus.UNREADABLE,
+                [f"INVALID_SCALE_{field_name.upper()}"],
+                f"Digit-only amount '{raw_value}' in {detected_currency} has fewer than 4 digits",
+            )
+
         # Standard integer rupiah: remove all comma and dot grouping separators
         normalized_str = compact.replace(",", "").replace(".", "")
 
