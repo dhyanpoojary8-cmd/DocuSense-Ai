@@ -53,6 +53,16 @@ class TestMonetaryParser:
         assert status == FieldStatus.VALID
         assert val == Decimal("500.00")
 
+    def test_idr_currency_hint_integer(self):
+        val, status, flags, msg = parse_monetary_value("99,000", field_name="total", currency_hint="IDR")
+        assert status == FieldStatus.VALID
+        assert val == Decimal("99000")
+
+    def test_idr_auto_detect_rp_symbol(self):
+        val, status, flags, msg = parse_monetary_value("Rp 150.000", field_name="total")
+        assert status == FieldStatus.VALID
+        assert val == Decimal("150000")
+
     def test_whitespace_inside_number(self):
         val, status, flags, msg = parse_monetary_value("1 500.25", field_name="total")
         assert status == FieldStatus.VALID

@@ -116,7 +116,8 @@ def validate_document_number(raw_value: Optional[str]) -> ExtractedField:
 def validate_document_fields(
     raw_fields: Dict[str, Any],
     reference_date: Optional[date] = None,
-    tolerance: Decimal = DEFAULT_TOLERANCE,
+    tolerance: Optional[Decimal] = None,
+    currency_hint: Optional[str] = None,
 ) -> DocumentValidationResult:
     """Run full deterministic validation on raw extracted document fields.
 
@@ -162,7 +163,12 @@ def validate_document_fields(
     for m_name in ["subtotal", "tax", "total"]:
         raw_m = raw_fields.get(m_name)
         allow_neg = (m_name == "tax")  # Tax credits can sometimes be negative
-        dec_val, m_status, m_flags, m_msg = parse_monetary_value(raw_m, allow_negative=allow_neg, field_name=m_name)
+        dec_val, m_status, m_flags, m_msg = parse_monetary_value(
+            raw_m,
+            allow_negative=allow_neg,
+            field_name=m_name,
+            currency_hint=currency_hint,
+        )
         money_dec[m_name] = dec_val
         m_conf = 0.95 if m_status == FieldStatus.VALID else 0.1
         fields[m_name] = ExtractedField(
@@ -182,6 +188,7 @@ def validate_document_fields(
         tax=money_dec["tax"],
         total=money_dec["total"],
         tolerance=tolerance,
+        currency=currency_hint,
     )
     if not arithmetic_res.is_valid:
         if arithmetic_res.status == ArithmeticStatus.MISMATCH:

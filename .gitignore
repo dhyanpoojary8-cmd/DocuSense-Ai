@@ -1,9 +1,49 @@
-.env
-.venv/
-venv/
+# Python environment & cache
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/.venv/
+.venv/
+env/
+venv/
+ENV/
+
+# Pytest & Coverage
 .pytest_cache/
+.coverage
+htmlcov/
+
+# Node & Frontend
 node_modules/
-backend/uploads/
 dist/
+dist-ssr/
+*.local
+
+# Datasets and Receipt Images (keep code repo lightweight)
+references/datasets/
+*.jpg
+*.jpeg
+*.png
+*.tif
+*.tiff
+*.pdf
+!frontend/src/assets/*
+!docs/images/*
+
+# Application Uploads & Runtime Artifacts
+uploads/
 *.log
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+.env 
+.env.* 
+backend/uploads/ 
+*.log 
+!.env.example 
+!docs/*.png 
+!docs/*.jpg 

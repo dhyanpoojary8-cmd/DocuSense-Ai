@@ -34,3 +34,4 @@ class ExtractedField(BaseModel):
     confidence: ConfidenceIndicator = Field(description="Confidence/uncertainty assessment")
     flags: List[str] = Field(default_factory=list, description="Diagnostic warning/error codes")
     message: Optional[str] = Field(default=None, description="Human-readable explanation of any detected issues")
+    source: str = Field(default="ocr", description="Extraction provenance: ocr, pdf_text, mock, or vlm")
