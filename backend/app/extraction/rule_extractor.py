@@ -294,7 +294,7 @@ class DeterministicRuleExtractor(BaseFieldExtractor):
     def _extract_total(self, lines: List[str], full_text: str) -> Optional[str]:
         """Detect final total amount excluding cash/tunai/change lines."""
         keywords = ["total", "grand total", "total amount", "total due", "amount due", "total bayar", "total tagihan"]
-        exclude = re.compile(r"\b(?:subtotal|sub\s*total|total\s*item|total\s*qty|total\s*tax)\b", re.IGNORECASE)
+        exclude = re.compile(r"\b(?:sub\s*[a-z]?\s*total|total\s*item|total\s*qty|total\s*tax)\b", re.IGNORECASE)
         return self._extract_money_field(lines, keywords, exclude_line_regex=exclude, reverse=True, truncate_at_cash=True)
 
 

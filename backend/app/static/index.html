@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DocuSense AI – document field extraction</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c2230; --muted:#5b6475; --line:#d9dde5; --accent:#2457d6;
+          --ok:#14703a; --okbg:#e0f4e8; --warn:#8a5a00; --warnbg:#fff1d1; --bad:#a3262a; --badbg:#fde4e4; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12151c; --card:#1b2030; --text:#e8ebf2; --muted:#a2abbd; --line:#323a50; --accent:#7ba2ff;
+            --ok:#7fdca1; --okbg:#173a27; --warn:#f3c969; --warnbg:#3d2f10; --bad:#ff9b9e; --badbg:#44181b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  h1 { margin:8px 0 2px; font-size:1.5rem; }
+  .sub { margin:0 0 16px; color:var(--muted); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+  label { display:block; font-size:.85rem; color:var(--muted); margin-bottom:4px; }
+  input[type=file], select, input[type=text] { font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:8px; max-width:100%; }
+  button, a.btn { font:inherit; cursor:pointer; background:var(--accent); color:#fff; border:0; border-radius:6px; padding:9px 14px; text-decoration:none; display:inline-block; }
+  button.secondary, a.btn.secondary { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  :focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  .note { font-size:.85rem; color:var(--muted); margin:8px 0 0; }
+  #status { min-height:1.4em; margin:10px 0 0; }
+  .error { background:var(--badbg); color:var(--bad); border:1px solid var(--bad); border-radius:8px; padding:10px 12px; }
+  .banner { border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+  .banner.ok { background:var(--okbg); color:var(--ok); }
+  .banner.warn { background:var(--warnbg); color:var(--warn); }
+  .grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); gap:16px; }
+  @media (max-width:800px) { .grid { grid-template-columns:1fr; } }
+  .preview { width:100%; max-height:560px; object-fit:contain; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  iframe.preview { height:560px; }
+  .tablewrap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; white-space:nowrap; }
+  td input[type=text] { width:100%; min-width:130px; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.78rem; font-weight:600; white-space:nowrap; }
+  .badge.VALID { background:var(--okbg); color:var(--ok); }
+  .badge.MISSING, .badge.UNREADABLE, .badge.INCONSISTENT { background:var(--badbg); color:var(--bad); }
+  .badge.AMBIGUOUS { background:var(--warnbg); color:var(--warn); }
+  .small { font-size:.8rem; color:var(--muted); }
+  details { margin-top:12px; } pre { white-space:pre-wrap; word-break:break-word; font-size:.8rem; }
+  .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>DocuSense AI</h1>
+  <p class="sub">Upload an invoice or receipt. The app reads six fields, checks them, and flags what it is unsure about instead of guessing.</p>
+
+  <section class="card" aria-labelledby="up-h">
+    <h2 id="up-h" style="margin:0 0 10px;font-size:1.05rem">1. Upload a document</h2>
+    <div class="row">
+      <div><label for="file">File (PNG, JPG, WEBP or PDF, up to 10 MB)</label>
+        <input id="file" type="file" accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf"></div>
+      <div><label for="currency">Currency</label>
+        <select id="currency">
+          <option value="auto">Auto / unknown</option>
+          <option value="IDR">IDR (Indonesian rupiah)</option>
+          <option value="USD">USD</option><option value="EUR">EUR</option>
+          <option value="INR">INR</option><option value="MYR">MYR</option>
+        </select></div>
+      <button id="go" type="button">Extract fields</button>
+    </div>
+    <p class="note">Amounts for IDR have no decimals, so choose IDR for Indonesian receipts. Confidence values are heuristic indicators, not calibrated probabilities. Uploaded files stay on this server only.</p>
+    <p id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section id="empty" class="card"><p style="margin:0;color:var(--muted)">No document yet. Choose a file above and press “Extract fields”.</p></section>
+
+  <section id="result" class="card" hidden aria-labelledby="res-h">
+    <h2 id="res-h" style="margin:0 0 10px;font-size:1.05rem">2. Review the result</h2>
+    <div id="banner" class="banner"></div>
+    <div class="grid">
+      <div><div id="preview"></div><p class="small" id="meta"></p></div>
+      <div>
+        <div class="tablewrap">
+          <table>
+            <caption class="small" style="text-align:left;padding-bottom:6px">Edit any value and press Save to re-check it.</caption>
+            <thead><tr><th>Field</th><th>Value</th><th>Status</th><th>Confidence</th><th>Source</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <a id="csv" class="btn" href="#">Download CSV</a>
+          <a id="json" class="btn secondary" href="#">Download JSON</a>
+          <a class="btn secondary" href="/docs" target="_blank" rel="noopener">API docs</a>
+        </div>
+        <details><summary>Raw text read from the document</summary><pre id="raw"></pre></details>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var LABELS = { vendor: "Vendor", document_number: "Document number", date: "Date",
+                 subtotal: "Subtotal", tax: "Tax", total: "Total" };
+  var current = null;
+
+  function el(tag, props, kids) {
+    var n = document.createElement(tag);
+    Object.keys(props || {}).forEach(function (k) {
+      if (k === "text") { n.textContent = props[k]; } else { n.setAttribute(k, props[k]); }
+    });
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+  function setStatus(msg, isError) {
+    var s = $("status"); s.textContent = ""; s.className = "";
+    if (!msg) { return; }
+    if (isError) { s.className = "error"; }
+    s.textContent = msg;
+  }
+  async function readError(res) {
+    try { var j = await res.json(); if (j && typeof j.detail === "string") { return j.detail; }
+          if (j && Array.isArray(j.detail) && j.detail[0]) { return j.detail[0].msg; } } catch (e) {}
+    return "Something went wrong (code " + res.status + ").";
+  }
+
+  function render(rec) {
+    current = rec;
+    $("empty").hidden = true; $("result").hidden = false;
+    var s = rec.summary, banner = $("banner");
+    banner.className = "banner " + (s.needs_review ? "warn" : "ok");
+    banner.textContent = s.needs_review
+      ? "Please check: " + s.fields_to_review.map(function (n) { return LABELS[n]; }).join(", ") + ". These could not be confirmed, so they were left blank or flagged."
+      : "All six fields passed the automatic checks.";
+
+    var pv = $("preview"); pv.textContent = "";
+    var url = "/api/documents/" + rec.id + "/file";
+    pv.appendChild(rec.kind === "pdf"
+      ? el("iframe", { "class": "preview", src: url, title: "Uploaded PDF" })
+      : el("img", { "class": "preview", src: url, alt: "Uploaded document" }));
+    $("meta").textContent = rec.filename + " · read by " + (rec.source === "pdf_text" ? "PDF text" : "OCR") +
+      " · currency: " + (rec.currency || "auto");
+
+    var body = $("rows"); body.textContent = "";
+    Object.keys(LABELS).forEach(function (name) {
+      var f = rec.fields[name];
+      var input = el("input", { type: "text", id: "in-" + name, maxlength: "200",
+                                "aria-label": LABELS[name] + " value" });
+      input.value = f.value !== null && f.value !== undefined ? f.value : (f.raw_value || "");
+      var btn = el("button", { type: "button", "class": "secondary", text: "Save" });
+      btn.addEventListener("click", function () { save(name, input.value, btn); });
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { save(name, input.value, btn); } });
+      var issue = (f.status !== "VALID" && f.message) ? [el("div", { "class": "small", text: f.message })] : [];
+      body.appendChild(el("tr", {}, [
+        el("th", { scope: "row", text: LABELS[name] }),
+        el("td", {}, [input].concat(issue)),
+        el("td", {}, [el("span", { "class": "badge " + f.status, text: f.status })]),
+        el("td", { text: f.confidence.toFixed(2) }),
+        el("td", { text: f.source }),
+        el("td", {}, [btn])
+      ]));
+    });
+    $("csv").href = "/api/documents/" + rec.id + "/export?format=csv";
+    $("json").href = "/api/documents/" + rec.id + "/export?format=json";
+    $("raw").textContent = rec.raw_text || "(no text was read)";
+  }
+
+  async function save(name, value, btn) {
+    if (!current) { return; }
+    btn.disabled = true; setStatus("Checking…");
+    try {
+      var res = await fetch("/api/documents/" + current.id + "/correct", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ field: name, value: value })
+      });
+      if (!res.ok) { setStatus(await readError(res), true); } else { render(await res.json()); setStatus("Saved."); }
+    } catch (e) { setStatus("Could not reach the server.", true); }
+    btn.disabled = false;
+  }
+
+  $("go").addEventListener("click", async function () {
+    var file = $("file").files[0];
+    if (!file) { setStatus("Please choose a file first.", true); return; }
+    if (file.size > 10 * 1024 * 1024) { setStatus("That file is over 10 MB.", true); return; }
+    var fd = new FormData();
+    fd.append("file", file); fd.append("currency", $("currency").value);
+    $("go").disabled = true; setStatus("Reading the document… this can take up to a minute.");
+    try {
+      var res = await fetch("/api/documents/upload", { method: "POST", body: fd });
+      if (!res.ok) { setStatus(await readError(res), true); } else { render(await res.json()); setStatus(""); }
+    } catch (e) { setStatus("Could not reach the server. Is it running?", true); }
+    $("go").disabled = false;
+  });
+})();
+</script>
+</body>
+</html>
