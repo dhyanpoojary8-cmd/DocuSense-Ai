@@ -28,9 +28,31 @@ from app.models.extraction import ExtractionSource
 from app.models.field import ExtractedField
 from app.models.validation import ArithmeticStatus
 from app.validation.rules_engine import validate_document_fields
+import os
+import tempfile
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-UPLOAD_DIR = BASE_DIR / "uploads"          # git-ignored
+
+
+def _ensure_upload_dir() -> Path:
+    """Ensure upload directory exists and is writable, falling back to tempdir if read-only."""
+    target = Path(os.environ.get("UPLOAD_DIR", BASE_DIR / "uploads"))
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        test_file = target / f".write_test_{uuid.uuid4().hex[:6]}"
+        test_file.touch()
+        test_file.unlink(missing_ok=True)
+        return target
+    except OSError:
+        fallback = Path(tempfile.gettempdir()) / "docusense_uploads"
+        try:
+            fallback.mkdir(parents=True, exist_ok=True)
+            return fallback
+        except OSError:
+            return target
+
+
+UPLOAD_DIR = _ensure_upload_dir()          # git-ignored; tolerates wiped or read-only disk
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024        # 10 MB
 FIELD_ORDER = ["vendor", "document_number", "date", "subtotal", "tax", "total"]
@@ -106,7 +128,13 @@ def _uuid_or_404(doc_id: str) -> str:
 def _save(rec: Dict[str, Any]) -> None:
     _STORE[rec["id"]] = rec
     try:
-        (UPLOAD_DIR / f"{rec['id']}.json").write_text(json.dumps(rec), encoding="utf-8")
+        upload_dir = UPLOAD_DIR
+        try:
+            upload_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            upload_dir = Path(tempfile.gettempdir()) / "docusense_uploads"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+        (upload_dir / f"{rec['id']}.json").write_text(json.dumps(rec), encoding="utf-8")
     except OSError:
         pass  # in-memory copy still works
 
@@ -115,13 +143,16 @@ def get_record(doc_id: str) -> Dict[str, Any]:
     doc_id = _uuid_or_404(doc_id)
     rec = _STORE.get(doc_id)
     if rec is None:
-        path = UPLOAD_DIR / f"{doc_id}.json"
-        if path.is_file():
-            try:
-                rec = json.loads(path.read_text(encoding="utf-8"))
-                _STORE[doc_id] = rec
-            except (OSError, ValueError):
-                rec = None
+        candidate_dirs = [UPLOAD_DIR, Path(tempfile.gettempdir()) / "docusense_uploads"]
+        for cdir in candidate_dirs:
+            path = cdir / f"{doc_id}.json"
+            if path.is_file():
+                try:
+                    rec = json.loads(path.read_text(encoding="utf-8"))
+                    _STORE[doc_id] = rec
+                    break
+                except (OSError, ValueError):
+                    rec = None
     if rec is None:
         raise HTTPException(404, "Document not found.")
     return rec
@@ -177,10 +208,23 @@ def _text_from_pdf(path: Path) -> Tuple[str, ExtractionSource]:
 def process_document(data: bytes, kind: str, ext: str, media_type: str,
                      display_name: str, currency: Optional[str]) -> Dict[str, Any]:
     doc_id = str(uuid.uuid4())
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    upload_dir = UPLOAD_DIR
+    try:
+        upload_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        upload_dir = Path(tempfile.gettempdir()) / "docusense_uploads"
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
     stored_name = f"{doc_id}{ext}"
-    path = UPLOAD_DIR / stored_name
-    path.write_bytes(data)  # stored under a random name; the user's file name is never used on disk
+    path = upload_dir / stored_name
+    try:
+        path.write_bytes(data)  # stored under a random name; the user's file name is never used on disk
+    except OSError:
+        upload_dir = Path(tempfile.gettempdir()) / "docusense_uploads"
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        path = upload_dir / stored_name
+        path.write_bytes(data)
+
     try:
         if kind == "image":
             raw_text, source = _ocr_image(_read_image(data)), ExtractionSource.OCR
@@ -245,8 +289,12 @@ def get_document(doc_id: str):
 @app.get("/api/documents/{doc_id}/file")
 def get_document_file(doc_id: str):
     rec = get_record(doc_id)
-    path = UPLOAD_DIR / rec["stored_name"]
-    if not path.is_file():
+    candidate_paths = [
+        UPLOAD_DIR / rec["stored_name"],
+        Path(tempfile.gettempdir()) / "docusense_uploads" / rec["stored_name"],
+    ]
+    path = next((p for p in candidate_paths if p.is_file()), None)
+    if path is None:
         raise HTTPException(404, "The stored file is no longer available.")
     return FileResponse(path, media_type=rec["media_type"])
 

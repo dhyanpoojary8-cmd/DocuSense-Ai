@@ -98,20 +98,14 @@ def evaluate_dev_set(data_dir: Path) -> int:
             pred_status: Optional[str] = None
             if pred_field:
                 pred_status = pred_field.status.value if hasattr(pred_field.status, "value") else str(pred_field.status)
-                if pred_field.normalized_value is not None and pred_status != "AMBIGUOUS":
+                # Only a VALID field with a value counts as an answer. Everything else
+                # (MISSING, AMBIGUOUS, UNREADABLE, INCONSISTENT) is an abstention.
+                # Same rule as scripts/heldout_eval.py, so dev and held-out numbers are comparable.
+                if pred_status == "VALID" and pred_field.normalized_value is not None:
                     try:
                         pred_val = Decimal(str(pred_field.normalized_value))
                     except Exception:
                         pred_val = None
-                elif pred_field.raw_value and pred_status not in ("AMBIGUOUS", "UNREADABLE", "MISSING"):
-                    pv, pstat, _, _ = parse_monetary_value(
-                        pred_field.raw_value,
-                        allow_negative=(field_name == "tax"),
-                        currency_hint="IDR",
-                        field_name=field_name,
-                    )
-                    if pstat != FieldStatus.AMBIGUOUS:
-                        pred_val = pv
 
             # Compare predicted value against ground truth: correct / wrong / abstained
             if pred_val is not None:

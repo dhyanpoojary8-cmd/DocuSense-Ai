@@ -1,0 +1,341 @@
+{
+  "stats": {
+    "subtotal": {
+      "labelled": 19,
+      "correct": 5,
+      "wrong": 2,
+      "abstained": 12,
+      "no_label": 11,
+      "bad_label": 0,
+      "reasons": {
+        "INCONSISTENT": 1,
+        "MISSING": 11
+      }
+    },
+    "tax": {
+      "labelled": 12,
+      "correct": 3,
+      "wrong": 0,
+      "abstained": 9,
+      "no_label": 18,
+      "bad_label": 0,
+      "reasons": {
+        "INCONSISTENT": 1,
+        "MISSING": 8
+      }
+    },
+    "total": {
+      "labelled": 28,
+      "correct": 10,
+      "wrong": 4,
+      "abstained": 14,
+      "no_label": 1,
+      "bad_label": 1,
+      "reasons": {
+        "INCONSISTENT": 1,
+        "MISSING": 13
+      }
+    }
+  },
+  "wrong": [
+    {
+      "file": "cord_test_002.png",
+      "field": "total",
+      "predicted": "5000",
+      "label": "28000",
+      "ocr_text": "1 31h gil 4 24.000\noN mn 4,000\ng 4 cintenetentetetenaien f\nsub fil: y 28,000\ni . ees\nTOTAL 3 B5.000\nTOTAgle \\"
+    },
+    {
+      "file": "cord_test_014.png",
+      "field": "subtotal",
+      "predicted": "17850",
+      "label": "238000",
+      "ocr_text": "ry Am em te ee am rete cee ame mm ce mee em Er teat en ee\n1 RedVelvel Cheese Sie 39,000\ngm 1 Chicken Baked Rice a O00\n* 1 Fash nm Chips 45,008\n. 1 Husrroom Soup 30, 000\n. 1 Chanumile Po, UOd ;\ni Ived Tea 20, 000 *\n_ SUBTOTAL ad , 000\ni : fervice 17,850\nwe : 4 or rae\n- TOTAL 21,445\nae coupon 100,000\n| we ; Charme 16,040\nc i ge 7} BRIDE Le CARL SDE Seat"
+    },
+    {
+      "file": "cord_test_014.png",
+      "field": "total",
+      "predicted": "21445",
+      "label": "281435",
+      "ocr_text": "ry Am em te ee am rete cee ame mm ce mee em Er teat en ee\n1 RedVelvel Cheese Sie 39,000\ngm 1 Chicken Baked Rice a O00\n* 1 Fash nm Chips 45,008\n. 1 Husrroom Soup 30, 000\n. 1 Chanumile Po, UOd ;\ni Ived Tea 20, 000 *\n_ SUBTOTAL ad , 000\ni : fervice 17,850\nwe : 4 or rae\n- TOTAL 21,445\nae coupon 100,000\n| we ; Charme 16,040\nc i ge 7} BRIDE Le CARL SDE Seat"
+    },
+    {
+      "file": "cord_test_015.png",
+      "field": "total",
+      "predicted": "25000",
+      "label": "63000",
+      "ocr_text": "XXI1 :\n: cafe\n.\n| ED Gu \u00ab '\nTO ae Oe ee ee Bae\n1 Lemon Tea (L) 25.000 pA\n1 Caramel Smal] 38. 000 *\nwage he gage wr mwimemeeamenee mem nemo enn. .\nBre o pss hy roe 70,000"
+    },
+    {
+      "file": "cord_test_017.png",
+      "field": "subtotal",
+      "predicted": "94000",
+      "label": "91000",
+      "ocr_text": "we\n| in\nVinbli's Mace 1 28,000\nMacatella blot 2 38,000\nDou\nChit Pepper ' 14,000 .\nCrquetes . er\nCheasa 1 14,000 nt\nCrates\nViaatik Amook | o oe cope\nMasti Pui 1 0 oe\nPubtotal 94,000\nHiscawat (0) a\nTOTAL Rp. 91,000 dag itim Hn ee\n. Py te yong >\nTRB ries :\nDebit 91000 a ce ee\nXXXKKAXKAKKK age Sena esracetnce"
+    },
+    {
+      "file": "cord_test_024.png",
+      "field": "total",
+      "predicted": "118060",
+      "label": "118000",
+      "ocr_text": ", gute 1\n\n: Ratt\n\nse\n\nBer\n\negg ees a\nag } mbes te LE ear\nee PEW Y AGS Ta bo ECLuUG Se\nspare a ee eine i ne ee ee a eee a ee cate Ok fe ie et ee een oo eee ee ans\nNS Vee de ed dean, bed we\nme 6=6Total, Rp.118.060 Pa\na * . \u201c"
+    }
+  ],
+  "abstained": [
+    {
+      "file": "cord_test_000.png",
+      "field": "subtotal",
+      "label": "60000",
+      "reason": "INCONSISTENT"
+    },
+    {
+      "file": "cord_test_000.png",
+      "field": "tax",
+      "label": "5455",
+      "reason": "INCONSISTENT"
+    },
+    {
+      "file": "cord_test_000.png",
+      "field": "total",
+      "label": "60000",
+      "reason": "INCONSISTENT"
+    },
+    {
+      "file": "cord_test_002.png",
+      "field": "subtotal",
+      "label": "28000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_003.png",
+      "field": "subtotal",
+      "label": "11000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_003.png",
+      "field": "total",
+      "label": "11000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_004.png",
+      "field": "subtotal",
+      "label": "194000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_004.png",
+      "field": "total",
+      "label": "174600",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_007.png",
+      "field": "subtotal",
+      "label": "100909",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_007.png",
+      "field": "tax",
+      "label": "10091",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_007.png",
+      "field": "total",
+      "label": "111000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_008.png",
+      "field": "subtotal",
+      "label": "45455",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_008.png",
+      "field": "tax",
+      "label": "4545",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_008.png",
+      "field": "total",
+      "label": "50000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_009.png",
+      "field": "subtotal",
+      "label": "36000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_011.png",
+      "field": "total",
+      "label": "230000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_012.png",
+      "field": "total",
+      "label": "120000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_013.png",
+      "field": "subtotal",
+      "label": "46636",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_013.png",
+      "field": "tax",
+      "label": "4664",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_013.png",
+      "field": "total",
+      "label": "51300",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_014.png",
+      "field": "tax",
+      "label": "25585",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_018.png",
+      "field": "total",
+      "label": "156000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_019.png",
+      "field": "subtotal",
+      "label": "160000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_019.png",
+      "field": "tax",
+      "label": "16000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_019.png",
+      "field": "total",
+      "label": "176000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_020.png",
+      "field": "subtotal",
+      "label": "325600",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_020.png",
+      "field": "tax",
+      "label": "34351",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_020.png",
+      "field": "total",
+      "label": "377859",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_021.png",
+      "field": "total",
+      "label": "38000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_023.png",
+      "field": "total",
+      "label": "63000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_027.png",
+      "field": "tax",
+      "label": "5600",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_028.png",
+      "field": "subtotal",
+      "label": "369000",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_029.png",
+      "field": "subtotal",
+      "label": "132636",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_029.png",
+      "field": "tax",
+      "label": "13264",
+      "reason": "MISSING"
+    },
+    {
+      "file": "cord_test_029.png",
+      "field": "total",
+      "label": "145900",
+      "reason": "MISSING"
+    }
+  ],
+  "files": [
+    "cord_test_000.png",
+    "cord_test_001.png",
+    "cord_test_002.png",
+    "cord_test_003.png",
+    "cord_test_004.png",
+    "cord_test_005.png",
+    "cord_test_006.png",
+    "cord_test_007.png",
+    "cord_test_008.png",
+    "cord_test_009.png",
+    "cord_test_010.png",
+    "cord_test_011.png",
+    "cord_test_012.png",
+    "cord_test_013.png",
+    "cord_test_014.png",
+    "cord_test_015.png",
+    "cord_test_016.png",
+    "cord_test_017.png",
+    "cord_test_018.png",
+    "cord_test_019.png",
+    "cord_test_020.png",
+    "cord_test_021.png",
+    "cord_test_022.png",
+    "cord_test_023.png",
+    "cord_test_024.png",
+    "cord_test_025.png",
+    "cord_test_026.png",
+    "cord_test_027.png",
+    "cord_test_028.png",
+    "cord_test_029.png"
+  ],
+  "missing_images": [],
+  "docs_all_correct": 8,
+  "docs_with_labels": 30,
+  "meta": {
+    "Date (UTC)": "2026-10-22T04:01:17+00:00",
+    "Run number": 1,
+    "Git commit": "a04a4bbcef9debf26cd64ec68c5eb7ccde79f8bb",
+    "Dataset": "CORD v2 test split, folder cord_test, first 30 receipts (licence CC BY 4.0)",
+    "Currency hint": "IDR",
+    "OCR / extractor": "Tesseract engine defaults at this commit: --psm 6, no line reconstruction; Pillow preprocessing (grayscale, 2x upscale of small images, autocontrast, threshold 140)",
+    "Tesseract": "5.4.0.20240606",
+    "Python": "3.11.9"
+  }
+}

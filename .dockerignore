@@ -1,0 +1,41 @@
+# Virtual environments
+.venv
+backend/.venv
+*/.venv
+venv
+env
+
+# Python byte code and caches
+__pycache__
+*/__pycache__
+*/**/__pycache__
+*.py[cod]
+*$py.class
+*.so
+
+# Datasets and references
+references
+backend/references
+dev_data
+backend/dev_data
+evaluation_reports
+backend/evaluation_reports
+
+# Uploads and temporary runtime files
+uploads
+backend/uploads
+*.log
+
+# Git repository
+.git
+.gitignore
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Pytest and coverage caches
+.pytest_cache
+.coverage
+htmlcov
